@@ -2,9 +2,57 @@ const express = require("express");
 const app = express();
 const port = process.env.PORT || 3001;
 
-app.get("/", (req, res) => res.type('html').send(html));
+/**
+ * 1) JSON を受け取れるようにする（必須）
+ */
+app.use(express.json({ limit: "10mb" })); // CSVが長い場合に備えて少し大きめ
 
-const server = app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+/**
+ * 2) 動作確認用（ブラウザで開くと "OK" が出る）
+ */
+app.get("/", (req, res) => {
+  res.type("text").send("OK");
+});
+
+/**
+ * 3) Dify から csv_text を受け取って CSVとして返す
+ *   - URL:  https://xxxxx.onrender.com/create-csv
+ *   - Header: x-api-key: <API_KEY と同じ値>
+ *   - Body:  { "csv_text": "user_prompt,category,...\n..." }
+ */
+app.post("/create-csv", (req, res) => {
+  try {
+    // --- APIキー認証（必須ならON）
+    const incomingKey = req.headers["x-api-key"]; // Dify側ヘッダーキーは x-api-key
+    const expectedKey = process.env.API_KEY;
+
+    if (!expectedKey) {
+      // Render側の環境変数未設定
+      return res.status(500).json({ error: "Server API_KEY is not set" });
+    }
+    if (!incomingKey || incomingKey !== expectedKey) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    // --- 本文
+    const csvText = req.body?.csv_text;
+    if (!csvText || typeof csvText !== "string") {
+      return res.status(400).json({ error: "csv_text is required (string)" });
+    }
+
+    // --- ダウンロードさせる（これが「CSVファイル化」の肝）
+    const filename = `ai_log_${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
+    res.setHeader("Content-Type", "text/csv; charset=utf-8");
+    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+    return res.status(200).send(csvText);
+  } catch (e) {
+    return res.status(500).json({ error: "Internal Server Error", detail: String(e) });
+  }
+});
+
+const server = app.listen(port, () => {
+  console.log(`Server listening on port ${port}`);
+});
 
 server.keepAliveTimeout = 120 * 1000;
 server.headersTimeout = 120 * 1000;
