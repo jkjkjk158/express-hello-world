@@ -35,19 +35,18 @@ app.post("/create-csv", (req, res) => {
     }
 
     // --- 本文
-    const csvText = req.body?.csv_text;
-    if (!csvText || typeof csvText !== "string") {
-      return res.status(400).json({ error: "csv_text is required (string)" });
-    }
-
-    // --- ダウンロードさせる（これが「CSVファイル化」の肝）
-    const filename = `ai_log_${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
-    res.setHeader("Content-Type", "text/csv; charset=utf-8");
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    return res.status(200).send(csvText);
-  } catch (e) {
-    return res.status(500).json({ error: "Internal Server Error", detail: String(e) });
+  const csvText = req.body?.csv_text;
+  if (!csvText || typeof csvText !== "string") {
+    return res.status(400).json({ error: "csv_text is required (string)" });
   }
+
+  // --- ダウンロードさせる（これが「CSVファイル化」の肝）
+  // 🚨 修正点: Content-Disposition ヘッダーを削除（ノードが完了しない原因）
+  // const filename = `ai_log_${new Date().toISOString().replace(/[:.]/g, "-")}.csv`;
+  res.setHeader("Content-Type", "text/csv; charset=utf-8");
+  // res.setHeader("Content-Disposition", `attachment; filename="${filename}"`); // <-- これを削除
+  
+  return res.status(200).send(csvText); // CSVテキストをそのまま応答として返す
 });
 
 const server = app.listen(port, () => {
