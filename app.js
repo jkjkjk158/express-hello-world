@@ -21,19 +21,21 @@ app.get("/", (req, res) => {
  * - Body:  { "csv_text": "user_prompt,category,...\n..." }
  */
 app.post("/create-csv", (req, res) => {
-  try {
-    // --- APIキー認証（必須ならON）
-    const incomingKey = req.headers["x-api-key"]; // Dify側ヘッダーキーは x-api-key
-    const expectedKey = process.env.APIKEY;
+  try {
+    // --- APIキー認証（必須ならON）
+    // 以下のAPIキー認証のコードをすべてコメントアウトします。
+    /*
+    const incomingKey = req.headers["x-api-key"]; // Dify側ヘッダーキーは x-api-key
+    const expectedKey = process.env.API_KEY;
 
-    // APIキーが設定されていない場合は500エラー
-    if (!expectedKey) {
-      return res.status(500).json({ error: "Server API_KEY is not set" });
-    }
-    // APIキーが一致しない場合は401エラー
-    if (!incomingKey || incomingKey !== expectedKey) {
-      return res.status(401).json({ error: "Unauthorized" });
-    }
+    if (!expectedKey) {
+      // Render側の環境変数未設定
+      return res.status(500).json({ error: "Server API_KEY is not set" });
+    }
+    if (!incomingKey || incomingKey !== expectedKey) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+    */
 
     // --- 本文
     const csvText = req.body?.csv_text;
