@@ -16,9 +16,9 @@ app.get("/", (req, res) => {
 
 /**
  * 3) Dify から csv_text を受け取って CSVとして返す
- *   - URL:  https://xxxxx.onrender.com/create-csv
- *   - Header: x-api-key: <API_KEY と同じ値>
- *   - Body:  { "csv_text": "user_prompt,category,...\n..." }
+ * - URL: https://xxxxx.onrender.com/create-csv
+ * - Header: x-api-key: <API_KEY と同じ値>
+ * - Body:  { "csv_text": "user_prompt,category,...\n..." }
  */
 app.post("/create-csv", (req, res) => {
   try {
@@ -26,28 +26,32 @@ app.post("/create-csv", (req, res) => {
     const incomingKey = req.headers["x-api-key"]; // Dify側ヘッダーキーは x-api-key
     const expectedKey = process.env.API_KEY;
 
+    // APIキーが設定されていない場合は500エラー
     if (!expectedKey) {
-      // Render側の環境変数未設定
       return res.status(500).json({ error: "Server API_KEY is not set" });
     }
+    // APIキーが一致しない場合は401エラー
     if (!incomingKey || incomingKey !== expectedKey) {
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     // --- 本文
     const csvText = req.body?.csv_text;
+    // csv_textが存在しない、または文字列でない場合は400エラー
     if (!csvText || typeof csvText !== "string") {
       return res.status(400).json({ error: "csv_text is required (string)" });
     }
 
     // --- CSVテキストをそのまま応答として返す
+    // Content-Dispositionは削除済み（ノードがRunningにならないようにするため）
     res.setHeader("Content-Type", "text/csv; charset=utf-8");
     return res.status(200).send(csvText);
 
-  } catch (e) { // <-- 👈 修正前はここがなく、文法エラーでした
+  } catch (e) {
+    // 予期せぬエラーが発生した場合
     return res.status(500).json({ error: "Internal Server Error", detail: String(e) });
-  } // <-- 👈 修正前はここがなく、文法エラーでした
-}); // <-- app.post の閉じ括弧
+  }
+});
 
 const server = app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
@@ -105,4 +109,4 @@ const html = `
     </section>
   </body>
 </html>
-`
+`;
