@@ -24,7 +24,7 @@ app.post("/create-csv", (req, res) => {
   try {
     // --- APIキー認証（必須ならON）
     const incomingKey = req.headers["x-api-key"]; // Dify側ヘッダーキーは x-api-key
-    const expectedKey = process.env.API_KEY;
+    const expectedKey = process.env.APIKEY;
 
     // APIキーが設定されていない場合は500エラー
     if (!expectedKey) {
